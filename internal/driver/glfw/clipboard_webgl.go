@@ -1,10 +1,10 @@
-// +build !js
+// +build js
 
 package glfw
 
 import (
 	"fyne.io/fyne"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/goxjs/glfw"
 )
 
 // Declare conformity with Clipboard interface

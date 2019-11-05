@@ -17,7 +17,7 @@ import (
 	"fyne.io/fyne/widget"
 
 	"fyne.io/fyne/layout"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/goxjs/glfw"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

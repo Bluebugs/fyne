@@ -1,4 +1,4 @@
-// +build !ci
+// +build !ci,!js
 
 // +build !mobile,!android,!ios
 
