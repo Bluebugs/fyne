@@ -1,4 +1,4 @@
-// +build !windows,!android,!ios
+// +build !windows,!android,!ios,!wasm,!js
 
 package dialog
 
