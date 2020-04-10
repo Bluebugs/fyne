@@ -51,6 +51,19 @@ func newTexture(textureFilter canvas.ImageScale) Texture {
 	return Texture(texture)
 }
 
+func getTexture(object fyne.CanvasObject, creator func(canvasObject fyne.CanvasObject) Texture) (Texture, error) {
+	texture, ok := textures[object]
+
+	if !ok {
+		texture = creator(object)
+		textures[object] = texture
+	}
+	if texture == NoTexture {
+		return NoTexture, fmt.Errorf("No texture available.")
+	}
+	return texture, nil
+}
+
 func (p *glPainter) imgToTexture(img image.Image, textureFilter canvas.ImageScale) Texture {
 	switch i := img.(type) {
 	case *image.Uniform:
