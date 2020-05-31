@@ -4,6 +4,7 @@ import (
 	"image"
 	"math"
 	"sync"
+	"log"
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/canvas"
@@ -110,10 +111,15 @@ func (c *glCanvas) SetContent(content fyne.CanvasObject) {
 
 	c.content.Resize(c.content.MinSize()) // give it the space it wants then calculate the real min
 	// the pass above makes some layouts wide enough to wrap, so we ask again what the true min is.
+
 	newSize := c.size.Union(c.canvasSize(c.content.MinSize()))
 	c.Unlock()
 
-	c.Resize(newSize)
+	c.Resize(c.size) // Resize the content to this canvas size
+
+	// If the canvas is to small, we need it to be resized up, but that should be done when the window is actually resized
+	c.context.(*window).Resize(newSize)
+
 	c.setDirty(true)
 }
 
@@ -375,7 +381,9 @@ func (c *glCanvas) ensureMinSize() bool {
 	shouldResize := windowNeedsMinSizeUpdate && (c.size.Width < c.MinSize().Width || c.size.Height < c.MinSize().Height)
 	c.RUnlock()
 	if shouldResize {
-		c.Resize(c.Size().Union(c.MinSize()))
+		// We need to resize the Window actually as the content doesn't fit at the moment
+		log.Println("Resize window ensureMinSize")
+		c.context.(*window).Resize(c.Size().Union(c.MinSize()))
 	}
 
 	if lastParent != nil {

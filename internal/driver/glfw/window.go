@@ -159,7 +159,6 @@ func (w *window) RequestFocus() {
 }
 
 func (w *window) Resize(size fyne.Size) {
-	w.canvas.Resize(size)
 	scaleSize := internal.ScaleSize(w.canvas, size)
 
 	w.runOnMainWhenCreated(func() {
