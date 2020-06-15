@@ -255,6 +255,11 @@ func (w *window) fitContent() {
 	defer w.viewLock.Unlock()
 	if w.fixedSize {
 		limitSize := internal.ScaleSize(w.canvas, w.Canvas().Size())
+		if limitSize.Width == 0 || limitSize.Height == 0 {
+			// When the content hasn't been set yet, the min size is not available yet and
+			// their is no point into doing anything
+			return
+		}
 
 		w.viewport.SetSizeLimits(limitSize.Width, limitSize.Height, limitSize.Width, limitSize.Height)
 		w.viewport.SetSize(limitSize.Width, limitSize.Height)
@@ -1123,11 +1128,11 @@ func (w *window) create() {
 		initWindowHints()
 
 		pixWidth, pixHeight := w.screenSize(w.canvas.size)
-		pixWidth = fyne.Max(pixWidth, w.width)
+		pixWidth = fyne.Max(pixWidth, w.size.Width)
 		if pixWidth == 0 {
 			pixWidth = 10
 		}
-		pixHeight = fyne.Max(pixHeight, w.height)
+		pixHeight = fyne.Max(pixHeight, w.size.Height)
 		if pixHeight == 0 {
 			pixHeight = 10
 		}
