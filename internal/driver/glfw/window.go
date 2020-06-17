@@ -76,9 +76,9 @@ type window struct {
 	mousePressed       fyne.CanvasObject
 	onClosed           func()
 
-	xpos, ypos    int
-	size          fyne.PixelSize // This field should be considered read only
-	shouldExpand  bool
+	xpos, ypos   int
+	size         fyne.PixelSize // This field should be considered read only
+	shouldExpand bool
 
 	eventLock  sync.RWMutex
 	eventQueue chan func()

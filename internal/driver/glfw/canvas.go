@@ -2,9 +2,9 @@ package glfw
 
 import (
 	"image"
+	"log"
 	"math"
 	"sync"
-	"log"
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/canvas"
