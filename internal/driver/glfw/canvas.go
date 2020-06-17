@@ -382,8 +382,9 @@ func (c *glCanvas) ensureMinSize() bool {
 	}
 	c.walkTrees(nil, ensureMinSize)
 
+	min := c.MinSize()
 	c.RLock()
-	shouldResize := windowNeedsMinSizeUpdate && (c.size.Width < c.MinSize().Width || c.size.Height < c.MinSize().Height)
+	shouldResize := windowNeedsMinSizeUpdate && (c.size.Width < min.Width || c.size.Height < min.Height)
 	c.RUnlock()
 	if shouldResize {
 		// We need to resize the Window actually as the content doesn't fit at the moment
