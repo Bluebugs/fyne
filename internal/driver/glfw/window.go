@@ -116,7 +116,6 @@ func (w *window) SetFullScreen(full bool) {
 			w.viewport.SetMonitor(monitor, 0, 0, mode.Width, mode.Height, mode.RefreshRate)
 		} else {
 			w.viewport.SetMonitor(nil, w.xpos, w.ypos, w.size.Width, w.size.Height, 0)
-			w.fullScreen = false
 		}
 	})
 }
