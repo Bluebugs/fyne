@@ -2,7 +2,6 @@ package glfw
 
 import (
 	"image"
-	"log"
 	"math"
 	"sync"
 
@@ -388,7 +387,6 @@ func (c *glCanvas) ensureMinSize() bool {
 	c.RUnlock()
 	if shouldResize {
 		// We need to resize the Window actually as the content doesn't fit at the moment
-		log.Println("Resize window ensureMinSize")
 		c.context.(*window).Resize(c.Size().Union(c.MinSize()))
 	}
 
