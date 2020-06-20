@@ -17,8 +17,8 @@ func ScaleInt(c fyne.Canvas, v int) int {
 }
 
 // ScaleSize converts a fyne.Size (unit coordinate) to a fyne.PixelSize (screen coordinate)
-func ScaleSize(c fyne.Canvas, s fyne.Size) fyne.PixelSize {
-	return fyne.NewPixelSize(ScaleInt(c, s.Width), ScaleInt(c, s.Height))
+func ScaleSize(c fyne.Canvas, s fyne.Size) PixelSize {
+	return NewPixelSize(ScaleInt(c, s.Width), ScaleInt(c, s.Height))
 }
 
 // UnscaleInt converts a screen coordinate for a given canvas to a fyne coordinate
@@ -32,6 +32,6 @@ func UnscaleInt(c fyne.Canvas, v int) int {
 }
 
 // UnscaleSize converts a fyne.PixelSize (screen coordinate) to fyne.Size (unit coordinate)
-func UnscaleSize(c fyne.Canvas, s fyne.PixelSize) fyne.Size {
+func UnscaleSize(c fyne.Canvas, s PixelSize) fyne.Size {
 	return fyne.NewSize(UnscaleInt(c, s.Width), UnscaleInt(c, s.Height))
 }

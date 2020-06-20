@@ -77,7 +77,7 @@ type window struct {
 	onClosed           func()
 
 	xpos, ypos   int
-	size         fyne.PixelSize // This field should be considered read only
+	size         internal.PixelSize // This field should be considered read only
 	shouldExpand bool
 
 	eventLock  sync.RWMutex
