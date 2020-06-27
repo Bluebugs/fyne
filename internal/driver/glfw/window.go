@@ -162,7 +162,6 @@ func (w *window) Resize(size fyne.Size) {
 
 	w.runOnMainWhenCreated(func() {
 		w.viewport.SetSize(scaleSize.Width, scaleSize.Height)
-		w.fitContent()
 	})
 }
 
