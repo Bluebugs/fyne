@@ -62,7 +62,9 @@ type window struct {
 	master     bool
 	fullScreen bool
 	centered   bool
+	centering  bool
 	visible    bool
+	resizing   bool
 
 	mousePos           fyne.Position
 	mouseDragged       fyne.Draggable
@@ -120,25 +122,34 @@ func (w *window) SetFullScreen(full bool) {
 	})
 }
 
-func (w *window) CenterOnScreen() {
+func (w *window) centerOnMain() {
+	viewWidth, viewHeight := w.screenSize(w.canvas.size)
+
+	// get window dimensions in pixels
+	monitor := w.getMonitorForWindow()
+	monMode := monitor.GetVideoMode()
+
+	// these come into play when dealing with multiple monitors
+	monX, monY := monitor.GetPos()
+
+	// math them to the middle
+	newX := (monMode.Width / 2) - (viewWidth / 2) + monX
+	newY := (monMode.Height / 2) - (viewHeight / 2) + monY
+
+	// set new window coordinates
+	w.viewport.SetPos(newX, newY)
+
 	w.centered = true
+}
+
+func (w *window) CenterOnScreen() {
+	if !w.resizing {
+		w.centering = true
+		return
+	}
 
 	w.runOnMainWhenCreated(func() {
-		viewWidth, viewHeight := w.screenSize(w.canvas.size)
-
-		// get window dimensions in pixels
-		monitor := w.getMonitorForWindow()
-		monMode := monitor.GetVideoMode()
-
-		// these come into play when dealing with multiple monitors
-		monX, monY := monitor.GetPos()
-
-		// math them to the middle
-		newX := (monMode.Width / 2) - (viewWidth / 2) + monX
-		newY := (monMode.Height / 2) - (viewHeight / 2) + monY
-
-		// set new window coordinates
-		w.viewport.SetPos(newX, newY)
+		w.centerOnMain()
 	}) // end of runOnMain(){}
 }
 
@@ -158,9 +169,9 @@ func (w *window) RequestFocus() {
 }
 
 func (w *window) Resize(size fyne.Size) {
-	scaleSize := internal.ScaleSize(w.canvas, size)
-
 	w.runOnMainWhenCreated(func() {
+		scaleSize := internal.ScaleSize(w.canvas, size)
+		w.resizing = true
 		w.viewport.SetSize(scaleSize.Width, scaleSize.Height)
 	})
 }
@@ -259,7 +270,11 @@ func (w *window) fitContent() {
 		}
 
 		w.viewport.SetSizeLimits(limitSize.Width, limitSize.Height, limitSize.Width, limitSize.Height)
-		w.viewport.SetSize(limitSize.Width, limitSize.Height)
+		if w.size.Width != limitSize.Width &&
+			w.size.Height != limitSize.Height {
+			w.resizing = true
+			w.viewport.SetSize(limitSize.Width, limitSize.Height)
+		}
 	} else {
 		// Adjust size to be at least minSize
 		if w.size.Width < minWidth || w.size.Height < minHeight {
@@ -270,6 +285,7 @@ func (w *window) fitContent() {
 			if targetHeight < minHeight {
 				targetHeight = minHeight
 			}
+			w.resizing = true
 			w.viewport.SetSize(targetWidth, targetHeight)
 		}
 
@@ -481,6 +497,11 @@ func (w *window) resized(_ *glfw.Window, width, height int) {
 		w.size = internal.ScaleSize(w.canvas, canvasSize)
 	}
 	w.canvas.Resize(canvasSize)
+
+	if w.centering {
+		w.centerOnMain()
+	}
+	w.resizing = false
 }
 
 func (w *window) frameSized(viewport *glfw.Window, width, height int) {
@@ -1030,6 +1051,7 @@ func (w *window) rescaleOnMain() {
 
 	size := w.canvas.size.Union(w.canvas.MinSize())
 	newWidth, newHeight := w.screenSize(size)
+	w.resizing = true
 	w.viewport.SetSize(newWidth, newHeight)
 }
 
