@@ -96,13 +96,13 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 
 			ShowConfirm("Overwrite?", "Are you sure you want to overwrite the file\n"+name+"?",
 				func(ok bool) {
+					f.win.Hide()
 					if !ok {
 						callback(nil, nil)
 						return
 					}
 
 					callback(storage.SaveFileToURI(storage.NewURI("file://" + path)))
-					f.win.Hide()
 					if f.file.onClosedCallback != nil {
 						f.file.onClosedCallback(true)
 					}
@@ -160,13 +160,13 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 func (f *fileDialog) loadFavorites() []fyne.CanvasObject {
 	home, _ := os.UserHomeDir()
 	places := []fyne.CanvasObject{
-		widget.NewButton("Home", func() {
+		makeFavoriteButton("Home", theme.HomeIcon(), func() {
 			f.setDirectory(home)
 		}),
-		widget.NewButton("Documents", func() {
+		makeFavoriteButton("Documents", theme.DocumentIcon(), func() {
 			f.setDirectory(filepath.Join(home, "Documents"))
 		}),
-		widget.NewButton("Downloads", func() {
+		makeFavoriteButton("Downloads", theme.DownloadIcon(), func() {
 			f.setDirectory(filepath.Join(home, "Downloads"))
 		}),
 	}
@@ -262,15 +262,31 @@ func (f *fileDialog) setSelected(file *fileDialogItem) {
 	}
 }
 
+// effectiveStartingDir calculates the directory at which the file dialog
+// should open, based on the values of  CWD, home, and any error conditions
+// which occur.
+//
+// Order of precedence is:
+//
+// * os.UserHomeDir()
+// * "/" (should be filesystem root on all supported platforms)
+func (f *FileDialog) effectiveStartingDir() string {
+
+	// Try home dir
+	dir, err := os.UserHomeDir()
+	if err == nil {
+		return dir
+	}
+	fyne.LogError("Could not load user home dir", err)
+
+	return "/"
+}
+
 func showFile(file *FileDialog) *fileDialog {
 	d := &fileDialog{file: file}
 	ui := d.makeUI()
-	dir, err := os.UserHomeDir()
-	if err != nil {
-		fyne.LogError("Could not load user home dir", err)
-		dir, _ = os.Getwd() //fallback
-	}
-	d.setDirectory(dir)
+
+	d.setDirectory(file.effectiveStartingDir())
 
 	size := ui.MinSize().Add(fyne.NewSize(fileIconCellWidth*2+theme.Padding()*4,
 		(fileIconSize+fileTextSize)+theme.Padding()*4))
@@ -298,6 +314,25 @@ func (f *FileDialog) Show() {
 		return
 	}
 	f.dialog = showFile(f)
+}
+
+// Resize dialog, call this function after dialog show
+func (f *FileDialog) Resize(size fyne.Size) {
+	maxSize := f.dialog.win.Size()
+	minSize := f.dialog.win.MinSize()
+	newWidth := size.Width
+	if size.Width > maxSize.Width {
+		newWidth = maxSize.Width
+	} else if size.Width < minSize.Width {
+		newWidth = minSize.Width
+	}
+	newHeight := size.Height
+	if size.Height > maxSize.Height {
+		newHeight = maxSize.Height
+	} else if size.Height < minSize.Height {
+		newHeight = minSize.Height
+	}
+	f.dialog.win.Resize(fyne.NewSize(newWidth, newHeight))
 }
 
 // Hide hides the file dialog.
@@ -379,4 +414,11 @@ func ShowFileSave(callback func(fyne.URIWriteCloser, error), parent fyne.Window)
 		return
 	}
 	dialog.Show()
+}
+
+func makeFavoriteButton(title string, icon fyne.Resource, f func()) *widget.Button {
+	b := widget.NewButtonWithIcon(title, icon, f)
+
+	b.Alignment = widget.ButtonAlignLeading
+	return b
 }

@@ -1,4 +1,4 @@
-// Package dialog defines standard dialog windows for application GUIs
+// Package dialog defines standard dialog windows for application GUIs.
 package dialog // import "fyne.io/fyne/dialog"
 
 import (
@@ -22,6 +22,7 @@ type Dialog interface {
 	Hide()
 	SetDismissText(label string)
 	SetOnClosed(closed func())
+	Resize(size fyne.Size)
 }
 
 // Declare conformity to Dialog interface
@@ -146,6 +147,25 @@ func (d *dialog) Show() {
 	d.win.Show()
 }
 
+// Resize dialog, call this function after dialog show
+func (d *dialog) Resize(size fyne.Size) {
+	maxSize := d.win.Size()
+	minSize := d.win.MinSize()
+	newWidth := size.Width
+	if size.Width > maxSize.Width {
+		newWidth = maxSize.Width
+	} else if size.Width < minSize.Width {
+		newWidth = minSize.Width
+	}
+	newHeight := size.Height
+	if size.Height > maxSize.Height {
+		newHeight = maxSize.Height
+	} else if size.Height < minSize.Height {
+		newHeight = minSize.Height
+	}
+	d.win.Resize(fyne.NewSize(newWidth, newHeight))
+}
+
 func (d *dialog) Hide() {
 	d.hideWithResponse(false)
 }
@@ -186,6 +206,10 @@ func NewCustomConfirm(title, confirm, dismiss string, content fyne.CanvasObject,
 	callback func(bool), parent fyne.Window) Dialog {
 	d := &dialog{content: content, title: title, icon: nil, parent: parent}
 	d.callback = callback
+	// TODO: This is required to avoid confusion.
+	// Normally this function should only provide the dialog, but currently it is also displayed, which is wrong.
+	// For this case the ShowCustomConfirm() method was built.
+	d.sendResponse = true
 
 	d.dismiss = &widget.Button{Text: dismiss, Icon: theme.CancelIcon(),
 		OnTapped: d.Hide,

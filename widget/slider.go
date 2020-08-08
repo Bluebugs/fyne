@@ -97,19 +97,29 @@ func (s *Slider) getRatio(e *fyne.PointEvent) float64 {
 	return 0.0
 }
 
-func (s *Slider) updateValue(ratio float64) {
-	v := s.Min + ratio*(s.Max-s.Min)
+func (s *Slider) clampValueToRange() {
+	if s.Value >= s.Max {
+		s.Value = s.Max
+		return
+	} else if s.Value <= s.Min {
+		s.Value = s.Min
+		return
+	}
+
+	if s.Step == 0 { // extended Slider may not have this set - assume value is not adjusted
+		return
+	}
 
 	i := -(math.Log10(s.Step))
 	p := math.Pow(10, i)
 
-	if v >= s.Max {
-		s.Value = s.Max
-	} else if v <= s.Min {
-		s.Value = s.Min
-	} else {
-		s.Value = float64(int(v*p)) / p
-	}
+	s.Value = float64(int(s.Value*p)) / p
+}
+
+func (s *Slider) updateValue(ratio float64) {
+	s.Value = s.Min + ratio*(s.Max-s.Min)
+
+	s.clampValueToRange()
 }
 
 // MinSize returns the size that this widget should not shrink below
@@ -121,7 +131,7 @@ func (s *Slider) MinSize() fyne.Size {
 // CreateRenderer links this widget to its renderer.
 func (s *Slider) CreateRenderer() fyne.WidgetRenderer {
 	s.ExtendBaseWidget(s)
-	track := canvas.NewRectangle(theme.ButtonColor())
+	track := canvas.NewRectangle(theme.ShadowColor())
 	active := canvas.NewRectangle(theme.TextColor())
 	thumb := &canvas.Circle{
 		FillColor:   theme.TextColor(),
@@ -149,10 +159,11 @@ type sliderRenderer struct {
 
 // Refresh updates the widget state for drawing.
 func (s *sliderRenderer) Refresh() {
-	s.track.FillColor = theme.ButtonColor()
+	s.track.FillColor = theme.ShadowColor()
 	s.thumb.FillColor = theme.TextColor()
 	s.active.FillColor = theme.TextColor()
 
+	s.slider.clampValueToRange()
 	s.Layout(s.slider.Size())
 	canvas.Refresh(s.slider.super())
 }

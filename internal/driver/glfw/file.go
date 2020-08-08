@@ -3,7 +3,6 @@ package glfw
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/storage"
@@ -19,28 +18,15 @@ func (d *gLDriver) FileReaderForURI(uri fyne.URI) (fyne.URIReadCloser, error) {
 }
 
 func (f *file) Name() string {
-	return filepath.Base(f.path)
+	return f.URI().Name()
 }
 
 func (f *file) URI() fyne.URI {
 	return storage.NewURI("file://" + f.path)
 }
 
-type fileWriter struct {
-	*os.File
-	path string
-}
-
 func (d *gLDriver) FileWriterForURI(uri fyne.URI) (fyne.URIWriteCloser, error) {
 	return openFile(uri, true)
-}
-
-func (f *fileWriter) Name() string {
-	return filepath.Base(f.path)
-}
-
-func (f *fileWriter) URI() fyne.URI {
-	return storage.NewURI("file://" + f.path)
 }
 
 func openFile(uri fyne.URI, create bool) (*file, error) {
@@ -49,10 +35,12 @@ func openFile(uri fyne.URI, create bool) (*file, error) {
 	}
 
 	path := uri.String()[7:]
-	f, err := os.Open(path)
-	if err != nil && create {
-		f, err = os.Create(path)
+	var f *os.File
+	var err error
+	if create {
+		f, err = os.Create(path) // If it exists this will truncate which is what we wanted
+	} else {
+		f, err = os.Open(path)
 	}
-
 	return &file{File: f, path: path}, err
 }

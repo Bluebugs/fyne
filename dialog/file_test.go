@@ -10,10 +10,104 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"fyne.io/fyne"
+	"fyne.io/fyne/layout"
 	"fyne.io/fyne/storage"
 	"fyne.io/fyne/test"
+	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
 )
+
+// comparePaths compares if two file paths point to the same thing, and calls
+// t.Fatalf() if there is an error in performing the comparison.
+//
+// Returns true of both paths point to the same thing.
+//
+// You should use this if you need to compare file paths, since it explicitly
+// normalizes the paths to a stable canonical form. It also nicely
+// abstracts out the requisite error handling.
+//
+// You should only call this function on paths that you expect to be valid.
+func comparePaths(t *testing.T, p1, p2 string) bool {
+	a1, err := filepath.Abs(p1)
+	if err != nil {
+		t.Fatalf("Failed to normalize path '%s'", p1)
+	}
+
+	a2, err := filepath.Abs(p2)
+	if err != nil {
+		t.Fatalf("Failed to normalize path '%s'", p2)
+	}
+
+	return a1 == a2
+}
+
+func TestEffectiveStartingDir(t *testing.T) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Skipf("os.UserHomeDir) failed, cannot run this test on this system, error was '%s'", err)
+	}
+
+	dialog := &FileDialog{}
+
+	// test that we get $HOME when running with the default struct values
+	res := dialog.effectiveStartingDir()
+	expect := home
+	if !comparePaths(t, res, expect) {
+		t.Errorf("Expected effectiveStartingDir() to be '%s', but it was '%s'",
+			expect, res)
+	}
+
+}
+
+func TestFileDialogResize(t *testing.T) {
+	win := test.NewWindow(widget.NewLabel("Content"))
+	win.Resize(fyne.NewSize(600, 400))
+	file := NewFileOpen(func(file fyne.URIReadCloser, err error) {}, win)
+	file.SetFilter(storage.NewExtensionFileFilter([]string{".png"}))
+
+	//Mimic the fileopen dialog
+	d := &fileDialog{file: file}
+	open := widget.NewButton("open", func() {})
+	ui := fyne.NewContainerWithLayout(layout.NewBorderLayout(nil, nil, nil, open), open)
+	originalSize := ui.MinSize().Add(fyne.NewSize(fileIconCellWidth*2+theme.Padding()*4,
+		(fileIconSize+fileTextSize)+theme.Padding()*4))
+	d.win = widget.NewModalPopUp(ui, file.parent.Canvas())
+	d.win.Resize(originalSize)
+	file.dialog = d
+
+	//Test resize - normal size scenario
+	size := fyne.NewSize(200, 180) //normal size to fit (600,400)
+	file.Resize(size)
+	expectedWidth := 200
+	assert.Equal(t, expectedWidth, file.dialog.win.Content.Size().Width+theme.Padding()*2)
+	expectedHeight := 180
+	assert.Equal(t, expectedHeight, file.dialog.win.Content.Size().Height+theme.Padding()*2)
+	//Test resize - normal size scenario again
+	size = fyne.NewSize(300, 280) //normal size to fit (600,400)
+	file.Resize(size)
+	expectedWidth = 300
+	assert.Equal(t, expectedWidth, file.dialog.win.Content.Size().Width+theme.Padding()*2)
+	expectedHeight = 280
+	assert.Equal(t, expectedHeight, file.dialog.win.Content.Size().Height+theme.Padding()*2)
+
+	//Test resize - greater than max size scenario
+	size = fyne.NewSize(800, 600)
+	file.Resize(size)
+	expectedWidth = 600                                          //since win width only 600
+	assert.Equal(t, expectedWidth, file.dialog.win.Size().Width) //max, also work
+	assert.Equal(t, expectedWidth, file.dialog.win.Content.Size().Width+theme.Padding()*2)
+	expectedHeight = 400                                           //since win heigh only 400
+	assert.Equal(t, expectedHeight, file.dialog.win.Size().Height) //max, also work
+	assert.Equal(t, expectedHeight, file.dialog.win.Content.Size().Height+theme.Padding()*2)
+
+	//Test again - extreme small size
+	size = fyne.NewSize(1, 1)
+	file.Resize(size)
+	expectedWidth = file.dialog.win.Content.MinSize().Width
+	assert.Equal(t, expectedWidth, file.dialog.win.Content.Size().Width)
+	expectedHeight = file.dialog.win.Content.MinSize().Height
+	assert.Equal(t, expectedHeight, file.dialog.win.Content.Size().Height)
+}
 
 func TestShowFileOpen(t *testing.T) {
 	var chosen fyne.URIReadCloser
