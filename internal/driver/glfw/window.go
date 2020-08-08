@@ -122,7 +122,7 @@ func (w *window) SetFullScreen(full bool) {
 	})
 }
 
-func (w *window) centerOnMain() {
+func (w *window) CenterOnScreen() {
 	w.centered = true
 
 	if w.view() != nil {
@@ -171,7 +171,7 @@ func (w *window) Resize(size fyne.Size) {
 
 		scaleSize := internal.ScaleSize(w.canvas, size)
 		if w.fixedSize || !w.visible { // fixed size ignores future `resized` and if not visible we may not get the event
-			w.size = scalesize
+			w.size = scaleSize
 		}
 		w.viewLock.Unlock()
 
@@ -269,10 +269,10 @@ func (w *window) fitContent() {
 	view := w.viewport
 	w.viewLock.RUnlock()
 	if w.size.Width < minWidth || w.size.Height < minHeight {
-		if w.size.width < minWidth {
+		if w.size.Width < minWidth {
 			w.expandSize.Width = minWidth
 		}
-		if w.size.height < minHeight {
+		if w.size.Height < minHeight {
 			w.expandSize.Height = minHeight
 		}
 		w.viewLock.Lock()
@@ -307,7 +307,7 @@ func (w *window) fitContent() {
 			view.SetSize(targetWidth, targetHeight)
 		}
 
-		view..SetSizeLimits(minWidth, minHeight, glfw.DontCare, glfw.DontCare)
+		view.SetSizeLimits(minWidth, minHeight, glfw.DontCare, glfw.DontCare)
 	}
 }
 
@@ -535,7 +535,7 @@ func (w *window) resized(_ *glfw.Window, width, height int) {
 	w.platformResize(canvasSize)
 
 	if w.centering {
-		w.centerOnMain()
+		w.CenterOnScreen()
 	}
 	w.resizing = false
 }
@@ -1229,7 +1229,7 @@ func (w *window) create() {
 			w.canvas.Resize(w.canvas.Size())
 		}
 		// order of operation matters so we do these last items in order
-		w.viewport.SetSize(w.width, w.height) // ensure we requested latest size
+		w.viewport.SetSize(w.size.Width, w.size.Height) // ensure we requested latest size
 	})
 }
 
