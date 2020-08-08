@@ -269,6 +269,7 @@ func (w *window) fitContent() {
 	view := w.viewport
 	w.viewLock.RUnlock()
 	if w.size.WidthPx < minWidth || w.size.HeightPx < minHeight {
+		w.expandSize = w.size
 		if w.size.WidthPx < minWidth {
 			w.expandSize.WidthPx = minWidth
 		}
