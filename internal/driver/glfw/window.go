@@ -117,7 +117,7 @@ func (w *window) SetFullScreen(full bool) {
 		if full {
 			w.viewport.SetMonitor(monitor, 0, 0, mode.Width, mode.Height, mode.RefreshRate)
 		} else {
-			w.viewport.SetMonitor(nil, w.xpos, w.ypos, w.size.Width, w.size.Height, 0)
+			w.viewport.SetMonitor(nil, w.xpos, w.ypos, w.size.WidthPx, w.size.HeightPx, 0)
 		}
 	})
 }
@@ -175,7 +175,7 @@ func (w *window) Resize(size fyne.Size) {
 		}
 		w.viewLock.Unlock()
 
-		w.viewport.SetSize(scaleSize.Width, scaleSize.Height)
+		w.viewport.SetSize(scaleSize.WidthPx, scaleSize.HeightPx)
 	})
 }
 
@@ -268,12 +268,12 @@ func (w *window) fitContent() {
 	w.viewLock.RLock()
 	view := w.viewport
 	w.viewLock.RUnlock()
-	if w.size.Width < minWidth || w.size.Height < minHeight {
-		if w.size.Width < minWidth {
-			w.expandSize.Width = minWidth
+	if w.size.WidthPx < minWidth || w.size.HeightPx < minHeight {
+		if w.size.WidthPx < minWidth {
+			w.expandSize.WidthPx = minWidth
 		}
-		if w.size.Height < minHeight {
-			w.expandSize.Height = minHeight
+		if w.size.HeightPx < minHeight {
+			w.expandSize.HeightPx = minHeight
 		}
 		w.viewLock.Lock()
 		w.shouldExpand = true // queue the resize to happen on main
@@ -281,22 +281,22 @@ func (w *window) fitContent() {
 	}
 	if w.fixedSize {
 		limitSize := internal.ScaleSize(w.canvas, w.Canvas().Size())
-		if limitSize.Width == 0 || limitSize.Height == 0 {
+		if limitSize.WidthPx == 0 || limitSize.HeightPx == 0 {
 			// When the content hasn't been set yet, the min size is not available yet and
 			// their is no point into doing anything
 			return
 		}
 
-		view.SetSizeLimits(limitSize.Width, limitSize.Height, limitSize.Width, limitSize.Height)
-		if w.size.Width != limitSize.Width &&
-			w.size.Height != limitSize.Height {
+		view.SetSizeLimits(limitSize.WidthPx, limitSize.HeightPx, limitSize.WidthPx, limitSize.HeightPx)
+		if w.size.WidthPx != limitSize.WidthPx &&
+			w.size.HeightPx != limitSize.HeightPx {
 			w.resizing = true
-			view.SetSize(limitSize.Width, limitSize.Height)
+			view.SetSize(limitSize.WidthPx, limitSize.HeightPx)
 		}
 	} else {
 		// Adjust size to be at least minSize
-		if w.size.Width < minWidth || w.size.Height < minHeight {
-			targetWidth, targetHeight := w.size.Width, w.size.Height
+		if w.size.WidthPx < minWidth || w.size.HeightPx < minHeight {
+			targetWidth, targetHeight := w.size.WidthPx, w.size.HeightPx
 			if targetWidth < minWidth {
 				targetWidth = minWidth
 			}
@@ -316,8 +316,8 @@ func (w *window) SetOnClosed(closed func()) {
 }
 
 func (w *window) getMonitorForWindow() *glfw.Monitor {
-	xOff := w.xpos + (w.size.Width / 2)
-	yOff := w.ypos + (w.size.Height / 2)
+	xOff := w.xpos + (w.size.WidthPx / 2)
+	yOff := w.ypos + (w.size.HeightPx / 2)
 
 	for _, monitor := range glfw.GetMonitors() {
 		x, y := monitor.GetPos()
@@ -1079,7 +1079,7 @@ func (w *window) rescaleOnMain() {
 	w.fitContent()
 
 	if w.fullScreen {
-		w.size.Width, w.size.Height = w.viewport.GetSize()
+		w.size.WidthPx, w.size.HeightPx = w.viewport.GetSize()
 		scaledFull := internal.UnscaleSize(w.canvas, w.size)
 		w.canvas.Resize(scaledFull)
 		return
@@ -1172,11 +1172,11 @@ func (w *window) create() {
 		initWindowHints()
 
 		pixWidth, pixHeight := w.screenSize(w.canvas.size)
-		pixWidth = fyne.Max(pixWidth, w.size.Width)
+		pixWidth = fyne.Max(pixWidth, w.size.WidthPx)
 		if pixWidth == 0 {
 			pixWidth = 10
 		}
-		pixHeight = fyne.Max(pixHeight, w.size.Height)
+		pixHeight = fyne.Max(pixHeight, w.size.HeightPx)
 		if pixHeight == 0 {
 			pixHeight = 10
 		}
@@ -1229,7 +1229,7 @@ func (w *window) create() {
 			w.canvas.Resize(w.canvas.Size())
 		}
 		// order of operation matters so we do these last items in order
-		w.viewport.SetSize(w.size.Width, w.size.Height) // ensure we requested latest size
+		w.viewport.SetSize(w.size.WidthPx, w.size.HeightPx) // ensure we requested latest size
 	})
 }
 

@@ -33,5 +33,5 @@ func UnscaleInt(c fyne.Canvas, v int) int {
 
 // UnscaleSize converts a fyne.PixelSize (screen coordinate) to fyne.Size (unit coordinate)
 func UnscaleSize(c fyne.Canvas, s PixelSize) fyne.Size {
-	return fyne.NewSize(UnscaleInt(c, s.Width), UnscaleInt(c, s.Height))
+	return fyne.NewSize(UnscaleInt(c, s.WidthPx), UnscaleInt(c, s.HeightPx))
 }
